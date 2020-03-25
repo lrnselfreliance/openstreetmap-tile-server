@@ -53,6 +53,8 @@ RUN apt-get install -y --no-install-recommends --allow-unauthenticated \
   libpq-dev \
   libproj-dev \
   libprotobuf-c0-dev \
+  libreadline5 \
+  libreadline-dev \
   libtiff5-dev \
   libtool \
   libxml2-dev \
@@ -63,12 +65,10 @@ RUN apt-get install -y --no-install-recommends --allow-unauthenticated \
   osmium-tool \
   osmosis \
   postgis \
-  postgresql-12 \
-  postgresql-contrib-12 \
-  postgresql-server-dev-12 \
+  postgresql-server-dev-all \
   protobuf-c-compiler \
-  python3-mapnik \
   python3-lxml \
+  python3-mapnik \
   python3-psycopg2 \
   python3-shapely \
   sudo \
@@ -80,6 +80,20 @@ RUN apt-get install -y --no-install-recommends --allow-unauthenticated \
 && apt-get clean autoclean \
 && apt-get autoremove --yes \
 && rm -rf /var/lib/{apt,dpkg,cache,log}/
+
+# Install Postgres 12
+RUN mkdir postgresql_src \
+ && wget https://ftp.postgresql.org/pub/source/v12.2/postgresql-12.2.tar.bz2 -O postgresql.tar.bz2 \
+ && tar xf postgresql.tar.bz2 --strip 1 -C postgresql_src \
+ && rm postgresql.tar.bz2 \
+ && cd postgresql_src \
+ && ./configure && make && make install \
+ && cd .. \
+ && rm -rf postgres_src \
+ && mkdir /usr/local/pgsql/data \
+ && chown postgres /usr/local/pgsql/data \
+ && su - postgres -c "/usr/local/pgsql/bin/initdb -D /usr/local/pgsql/data" \
+ && su - postgres -c "/usr/local/pgsql/bin/pg_ctl -D /usr/local/pgsql/data -l logfile start"
 
 # Set up PostGIS
 RUN wget http://download.osgeo.org/postgis/source/postgis-3.0.0.tar.gz -O postgis.tar.gz \
